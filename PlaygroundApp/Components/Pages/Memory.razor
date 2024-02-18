@@ -1,0 +1,47 @@
+﻿@page "/memory"
+@rendermode InteractiveServer
+@using Data.Services.Interfaces
+@using Data.Models.MemoryModels
+@inject IMemoryGameService memoryGameService
+<h3>Memory</h3>
+
+@if(memory is not null)
+{
+    <p role="status">Current turn: @memory.AmountOfTurns</p>
+    <button @onclick="async () => await ResetGame()" class="btn btn-primary">Reset</button>
+    foreach(Card card in memory.GameCards)
+    {
+        <button class="btn btn-primary" @onclick="() => FlipCard(card.PairId)">@card.Name</button>
+    }
+}
+
+@code {
+    private Data.Models.MemoryModels.Memory? memory { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        memory = await memoryGameService.StartGame(6, Data.Enums.MemoryThemes.Basic);
+    }
+
+    private void FlipCard(Guid cardPair)
+    {
+        if(memory.Turn == 1)
+        {
+            memory.Turn = 2;
+            memory.LastCheckedPairId = cardPair;
+        }
+        else
+        {
+            memory.Turn = 1;
+            if (memory.LastCheckedPairId != cardPair)
+            {
+                memory.AmountOfTurns++;
+            }         
+        }
+    }
+
+    private async Task ResetGame()
+    {
+        memory = await memoryGameService.StartGame(6, Data.Enums.MemoryThemes.Basic);
+    }
+}
